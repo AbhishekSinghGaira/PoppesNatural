@@ -74,12 +74,23 @@ const AddEditProduct: React.FC = () => {
   };
 
   const uploadImage = async (file: File): Promise<string> => {
-    const timestamp = Date.now();
-    const fileName = `products/${timestamp}_${file.name}`;
-    const storageRef = ref(storage, fileName);
-    
-    await uploadBytes(storageRef, file);
-    return await getDownloadURL(storageRef);
+    try {
+      const timestamp = Date.now();
+      const fileName = `products/${timestamp}_${file.name}`;
+      const storageRef = ref(storage, fileName);
+      
+      console.log('Uploading file:', fileName);
+      const snapshot = await uploadBytes(storageRef, file);
+      console.log('Upload successful:', snapshot);
+      
+      const downloadURL = await getDownloadURL(storageRef);
+      console.log('Download URL:', downloadURL);
+      
+      return downloadURL;
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw new Error('Failed to upload image. Please check your Firebase Storage configuration.');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
