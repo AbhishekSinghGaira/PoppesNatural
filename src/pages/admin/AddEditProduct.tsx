@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { doc, getDoc, addDoc, updateDoc, collection } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { ArrowLeft, Upload, X } from 'lucide-react';
-import { db, storage } from '../../lib/firebase';
+import { ArrowLeft, Link as LinkIcon } from 'lucide-react';
+import { db } from '../../lib/firebase';
 import { Product } from '../../types';
 import Button from '../../components/ui/Button';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
@@ -22,8 +21,7 @@ const AddEditProduct: React.FC = () => {
     category: '',
     inStock: true,
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string>('');
+  const [imageUrl, setImageUrl] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(isEditing);
 
@@ -48,7 +46,7 @@ const AddEditProduct: React.FC = () => {
           category: product.category || '',
           inStock: product.inStock,
         });
-        setImagePreview(product.image);
+        setImageUrl(product.image);
       } else {
         toast.error('Product not found');
         navigate('/admin/products');
@@ -61,36 +59,8 @@ const AddEditProduct: React.FC = () => {
     }
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const uploadImage = async (file: File): Promise<string> => {
-    try {
-      const timestamp = Date.now();
-      const fileName = `products/${timestamp}_${file.name}`;
-      const storageRef = ref(storage, fileName);
-      
-      console.log('Uploading file:', fileName);
-      const snapshot = await uploadBytes(storageRef, file);
-      console.log('Upload successful:', snapshot);
-      
-      const downloadURL = await getDownloadURL(storageRef);
-      console.log('Download URL:', downloadURL);
-      
-      return downloadURL;
-    } catch (error) {
-      console.error('Upload error:', error);
-      throw new Error('Failed to upload image. Please check your Firebase Storage configuration.');
-    }
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImageUrl(e.target.value);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,16 +68,9 @@ const AddEditProduct: React.FC = () => {
     setLoading(true);
 
     try {
-      let imageUrl = imagePreview;
-
-      // Upload new image if selected
-      if (imageFile) {
-        imageUrl = await uploadImage(imageFile);
-      }
-
       // Validate required fields
-      if (!imageUrl) {
-        toast.error('Please select a product image');
+      if (!imageUrl.trim()) {
+        toast.error('Please provide a product image URL');
         setLoading(false);
         return;
       }
@@ -186,44 +149,44 @@ const AddEditProduct: React.FC = () => {
             {/* Image Upload */}
             <div className="md:col-span-2">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Product Image
+                Product Image URL
               </label>
-              <div className="flex items-center space-x-6">
-                <div className="shrink-0">
-                  {imagePreview ? (
-                    <div className="relative">
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className="h-32 w-32 object-cover rounded-lg border-2 border-gray-300"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImagePreview('');
-                          setImageFile(null);
-                        }}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="h-32 w-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
-                      <Upload className="h-8 w-8 text-gray-400" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex-1">
+              <div className="space-y-4">
+                <div className="relative">
+                  <LinkIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                   <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-green-50 file:text-green-700 hover:file:bg-green-100"
+                    type="url"
+                    value={imageUrl}
+                    onChange={handleImageUrlChange}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                    placeholder="https://example.com/image.jpg"
+                    required
                   />
-                  <p className="text-sm text-gray-500 mt-2">
-                    Upload a high-quality image (JPG, PNG, WebP)
+                </div>
+                {imageUrl && (
+                  <div className="mt-4">
+                    <img
+                      src={imageUrl}
+                      alt="Preview"
+                      className="h-32 w-32 object-cover rounded-lg border-2 border-gray-300"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
+                <p className="text-sm text-gray-500">
+                  Provide a direct URL to a high-quality product image. You can use images from Pexels, Unsplash, or your own hosting.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <p className="text-sm text-blue-800">
+                    <strong>Suggested sources:</strong>
                   </p>
+                  <ul className="text-sm text-blue-700 mt-1 space-y-1">
+                    <li>• <a href="https://www.pexels.com" target="_blank" rel="noopener noreferrer" className="underline">Pexels.com</a> - Free stock photos</li>
+                    <li>• <a href="https://unsplash.com" target="_blank" rel="noopener noreferrer" className="underline">Unsplash.com</a> - High-quality images</li>
+                    <li>• Your own image hosting service</li>
+                  </ul>
                 </div>
               </div>
             </div>
