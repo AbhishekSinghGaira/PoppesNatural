@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { Package, ShoppingCart, Users, TrendingUp, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { db } from '../../lib/firebase';
