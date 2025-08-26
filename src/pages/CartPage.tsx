@@ -73,7 +73,7 @@ const CartPage: React.FC = () => {
                           <Minus className="h-4 w-4 text-gray-600" />
                         </button>
                         <span className="text-lg font-medium min-w-[2rem] text-center">
-                          {item.cartQuantity}
+                          {item.cartQuantity} {item.unit}
                         </span>
                         <button
                           onClick={() => updateQuantity(item.id, item.cartQuantity + 1)}

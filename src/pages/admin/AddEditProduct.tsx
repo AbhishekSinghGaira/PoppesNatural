@@ -18,6 +18,7 @@ const AddEditProduct: React.FC = () => {
     description: '',
     price: '',
     quantity: '',
+    unit: '500 grams',
     category: '',
     inStock: true,
   });
@@ -38,6 +39,7 @@ const AddEditProduct: React.FC = () => {
           description: product.description,
           price: product.price.toString(),
           quantity: product.quantity.toString(),
+          unit: product.unit || '500 grams',
           category: product.category || '',
           inStock: product.inStock,
         });
@@ -80,7 +82,49 @@ const AddEditProduct: React.FC = () => {
   };
 
   const isImageUrl = (url: string) => {
-    return (/\.(jpeg|jpg|gif|png|webp)$/i).test(url);
+    // Check for common image extensions
+    const imageExtensions = /\.(jpeg|jpg|gif|png|webp|bmp|svg|tiff|tif)$/i;
+    
+    // Check if URL ends with image extension
+    if (imageExtensions.test(url)) {
+      return true;
+    }
+    
+    // Check for common image hosting domains that might not have extensions
+    const imageHostingDomains = [
+      'images.unsplash.com',
+      'images.pexels.com',
+      'images.pixabay.com',
+      'i.imgur.com',
+      'cdn.pixabay.com',
+      'source.unsplash.com'
+    ];
+    
+    try {
+      const urlObj = new URL(url);
+      return imageHostingDomains.some(domain => urlObj.hostname.includes(domain));
+    } catch {
+      return false;
+    }
+  };
+
+  const validateImageUrl = (url: string): { isValid: boolean; message: string } => {
+    if (!url.trim()) {
+      return { isValid: false, message: 'Please enter an image URL' };
+    }
+    
+    if (!isValidUrl(url)) {
+      return { isValid: false, message: 'Please enter a valid URL (must start with http:// or https://)' };
+    }
+    
+    if (!isImageUrl(url)) {
+      return { 
+        isValid: false, 
+        message: 'URL does not appear to be an image. Supported formats: JPG, PNG, GIF, WebP, BMP, SVG, TIFF' 
+      };
+    }
+    
+    return { isValid: true, message: 'Valid image URL' };
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,16 +142,9 @@ const AddEditProduct: React.FC = () => {
 
       // Validate image URL only if a new one is provided
       if (imageUrl) {
-        // Validate image URL
-        if (!isValidUrl(imageUrl)) {
-          toast.error('Please enter a valid image URL');
-          setLoading(false);
-          return;
-        }
-
-        // Validate image extension
-        if (!isImageUrl(imageUrl)) {
-          toast.error('Please enter a valid image URL (jpg, jpeg, png, gif, webp)');
+        const validation = validateImageUrl(imageUrl);
+        if (!validation.isValid) {
+          toast.error(validation.message);
           setLoading(false);
           return;
         }
@@ -119,6 +156,7 @@ const AddEditProduct: React.FC = () => {
         description: formData.description,
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
+        unit: formData.unit,
         category: formData.category,
         inStock: formData.inStock,
         updatedAt: new Date(),
@@ -305,22 +343,50 @@ const AddEditProduct: React.FC = () => {
               />
             </div>
 
-            {/* Quantity */}
-            <div>
-              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
-                Stock Quantity *
-              </label>
-              <input
-                type="number"
-                id="quantity"
-                name="quantity"
-                required
-                min="0"
-                value={formData.quantity}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
-                placeholder="0"
-              />
+            {/* Quantity and Unit */}
+            <div className="flex items-center">
+              <div className="flex-1">
+                <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-2">
+                  Stock Quantity *
+                </label>
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  required
+                  min="0"
+                  value={formData.quantity}
+                  onChange={handleChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                  placeholder="0"
+                />
+              </div>
+              <div className="ml-4">
+                <label htmlFor="unit" className="block text-sm font-medium text-gray-700 mb-2">
+                  Unit *
+                </label>
+                <select
+                  id="unit"
+                  name="unit"
+                  value={formData.unit}
+                  onChange={handleChange}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-green-500 focus:border-green-500"
+                >
+                  <option value="250 grams">250 grams</option>
+                  <option value="500 grams">500 grams</option>
+                  <option value="1 kg">1 kg</option>
+                  <option value="2 kg">2 kg</option>
+                  <option value="5 kg">5 kg</option>
+                  <option value="250 ml">250 ml</option>
+                  <option value="500 ml">500 ml</option>
+                  <option value="1 liter">1 liter</option>
+                  <option value="2 liters">2 liters</option>
+                  <option value="1 piece">1 piece</option>
+                  <option value="pack of 2">pack of 2</option>
+                  <option value="pack of 5">pack of 5</option>
+                  <option value="pack of 10">pack of 10</option>
+                </select>
+              </div>
             </div>
 
             {/* Description */}

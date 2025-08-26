@@ -176,7 +176,7 @@ const CheckoutPage: React.FC = () => {
                   />
                   <div className="flex-1">
                     <h3 className="font-medium text-gray-900">{item.name}</h3>
-                    <p className="text-sm text-gray-600">Qty: {item.cartQuantity}</p>
+                    <p className="text-sm text-gray-600">Qty: {item.cartQuantity} {item.unit}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-medium text-gray-900">

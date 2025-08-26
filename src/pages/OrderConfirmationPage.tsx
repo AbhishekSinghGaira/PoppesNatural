@@ -107,8 +107,8 @@ const OrderConfirmationPage: React.FC = () => {
                   />
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{item.name}</h4>
-                    <p className="text-sm text-gray-600">Quantity: {item.cartQuantity}</p>
-                    <p className="text-sm text-gray-600">Price: ₹{item.price} each</p>
+                    <p className="text-sm text-gray-600">Quantity: {item.cartQuantity} {item.unit}</p>
+                    <p className="text-sm text-gray-600">Price: ₹{item.price}/{item.unit}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-semibold text-gray-900">

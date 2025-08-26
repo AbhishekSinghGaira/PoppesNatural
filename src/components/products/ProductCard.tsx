@@ -1,5 +1,5 @@
-import React from 'react';
-import { ShoppingCart, Star, Heart } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShoppingCart, Star, Heart, Plus, Minus } from 'lucide-react';
 import { Product } from '../../types';
 import { useCart } from '../../contexts/CartContext';
 import Button from '../ui/Button';
@@ -10,9 +10,23 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const { addToCart } = useCart();
+  const [quantity, setQuantity] = useState(1);
 
   const handleAddToCart = () => {
-    addToCart(product, 1);
+    addToCart(product, quantity);
+    setQuantity(1); // Reset quantity after adding to cart
+  };
+
+  const incrementQuantity = () => {
+    if (quantity < product.quantity) {
+      setQuantity(prev => prev + 1);
+    }
+  };
+
+  const decrementQuantity = () => {
+    if (quantity > 1) {
+      setQuantity(prev => prev - 1);
+    }
   };
 
   return (
@@ -54,16 +68,41 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-baseline space-x-2">
             <span className="text-2xl font-bold text-green-600">
-              ₹{product.price}
+              ₹{product.price}/{product.unit}
             </span>
             <span className="text-sm text-gray-500 line-through">
-              ₹{Math.round(product.price * 1.2)}
+              ₹{Math.round(product.price * 1.2)}/{product.unit}
             </span>
           </div>
           <span className="text-sm text-gray-500">
-            Stock: {product.quantity}
+            Stock: {product.quantity} {product.unit}
           </span>
         </div>
+
+        {/* Quantity Selector */}
+        {product.inStock && (
+          <div className="flex items-center justify-between mb-4">
+            <label className="text-sm font-medium text-gray-700">Quantity:</label>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={decrementQuantity}
+                disabled={quantity <= 1}
+                className="p-1 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
+              >
+                <Minus className="h-4 w-4" />
+              </button>
+              <span className="w-8 text-center font-medium">{quantity}</span>
+              <button
+                onClick={incrementQuantity}
+                disabled={quantity >= product.quantity}
+                className="p-1 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+              <span className="text-sm text-gray-500 ml-2">{product.unit}</span>
+            </div>
+          </div>
+        )}
 
         <Button
           onClick={handleAddToCart}
@@ -72,7 +111,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           size="md"
         >
           <ShoppingCart className="h-4 w-4 mr-2" />
-          {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+          {product.inStock ? `Add ${quantity} ${product.unit} to Cart` : 'Out of Stock'}
         </Button>
       </div>
     </div>
