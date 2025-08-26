@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ref, get, push, update, set } from 'firebase/database';
+import { doc, getDoc, addDoc, updateDoc, collection } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { ArrowLeft, Upload, X } from 'lucide-react';
 import { db, storage } from '../../lib/firebase';
@@ -35,11 +35,11 @@ const AddEditProduct: React.FC = () => {
 
   const fetchProduct = async (productId: string) => {
     try {
-      const productRef = ref(db, `products/${productId}`);
-      const snapshot = await get(productRef);
+      const docRef = doc(db, 'products', productId);
+      const docSnap = await getDoc(docRef);
       
-      if (snapshot.exists()) {
-        const product = snapshot.val() as Product;
+      if (docSnap.exists()) {
+        const product = docSnap.data() as Product;
         setFormData({
           name: product.name,
           description: product.description,
@@ -113,12 +113,10 @@ const AddEditProduct: React.FC = () => {
       };
 
       if (isEditing && id) {
-        const productRef = ref(db, `products/${id}`);
-        await update(productRef, productData);
+        await updateDoc(doc(db, 'products', id), productData);
         toast.success('Product updated successfully');
       } else {
-        const productsRef = ref(db, 'products');
-        await push(productsRef, {
+        await addDoc(collection(db, 'products'), {
           ...productData,
           createdAt: new Date(),
         });
